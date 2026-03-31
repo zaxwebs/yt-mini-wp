@@ -219,7 +219,7 @@
 		}
 		// Return focus to the link that opened the player.
 		if (lastTrigger) {
-			lastTrigger.focus();
+			lastTrigger.focus({ preventScroll: true });
 			lastTrigger = null;
 		}
 		// Clear drag position *after* the close transition finishes so the
