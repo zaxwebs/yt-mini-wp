@@ -196,11 +196,18 @@
 				player.stopVideo();
 			} catch (_) { }
 		}
-		// Clear drag position so CSS class takes over.
-		wrapper.style.top = "";
-		wrapper.style.left = "";
-		wrapper.style.bottom = "";
-		wrapper.style.right = "";
+		// Clear drag position *after* the close transition finishes so the
+		// player animates out from its current position instead of snapping
+		// back to the default corner first.
+		function resetPosition() {
+			wrapper.style.top = "";
+			wrapper.style.left = "";
+			wrapper.style.bottom = "";
+			wrapper.style.right = "";
+			posRatio = null;
+			container.removeEventListener("transitionend", resetPosition);
+		}
+		container.addEventListener("transitionend", resetPosition);
 	}
 
 
@@ -286,6 +293,25 @@
 	/*  Button handlers                                                    */
 	/* ------------------------------------------------------------------ */
 	btnClose.addEventListener("click", close);
+
+	/* ------------------------------------------------------------------ */
+	/*  Pause when the user clicks YT logo / title inside the iframe       */
+	/* ------------------------------------------------------------------ */
+	/*  Clicking the YouTube logo or the video title inside the native     */
+	/*  player opens youtube.com in a new tab. Because the click lands     */
+	/*  inside a cross-origin iframe we can't intercept it directly, but   */
+	/*  the browser shifts focus to the iframe first (triggering a window  */
+	/*  blur) and then opens the new tab. We use that signal to pause.     */
+	window.addEventListener("blur", function () {
+		if (!player) return;
+		// Check that the focus went to *our* iframe (not some other element)
+		var iframe = container.querySelector("iframe");
+		if (iframe && document.activeElement === iframe) {
+			try {
+				player.pauseVideo();
+			} catch (_) {}
+		}
+	});
 
 	/* ------------------------------------------------------------------ */
 	/*  Intercept link clicks                                              */
