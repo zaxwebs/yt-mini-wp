@@ -276,7 +276,10 @@
 	/* ------------------------------------------------------------------ */
 	/*  Dragging                                                           */
 	/* ------------------------------------------------------------------ */
+	var mobileQuery = window.matchMedia("(max-width: 480px)");
+
 	headerEl.addEventListener("pointerdown", function (e) {
+		if (mobileQuery.matches) return; // no drag on mobile
 		if (e.target.closest(".ytm-btn")) return;
 		isDragging = true;
 		container.classList.add("ytm-dragging");
