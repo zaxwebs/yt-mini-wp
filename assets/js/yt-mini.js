@@ -17,6 +17,7 @@
 	let dragOffset = { x: 0, y: 0 };
 	let dragSize = { w: 0, h: 0 }; // snapshot of wrapper size at drag start
 	let posRatio = null; // { rx, ry } — position as fraction of available space
+	let lastTrigger = null; // the link that opened the player (for focus return)
 
 	/* ------------------------------------------------------------------ */
 	/*  URL Parsing — detect YT links with timestamps                      */
@@ -90,6 +91,11 @@
 	var wrapper = el("div", "ytm-wrapper");
 	var container = el("div", "ytm-player");
 
+	// Accessibility: mark the player as a dialog.
+	container.setAttribute("role", "dialog");
+	container.setAttribute("aria-label", "YouTube miniplayer");
+	container.setAttribute("aria-hidden", "true");
+
 	// Read position setting from WordPress.
 	var pos = (typeof ytMiniSettings !== "undefined" && ytMiniSettings.position)
 		? ytMiniSettings.position : "bottom-right";
@@ -162,6 +168,10 @@
 				events: {
 					onReady: function (e) {
 						updateTitle(e.target);
+						// Keep the iframe out of our dialog's Tab order.
+						e.target.getIframe().setAttribute("tabindex", "-1");
+						// Reclaim focus after the iframe finishes loading.
+						btnClose.focus();
 					},
 					onStateChange: function (e) {
 						if (e.data === YT.PlayerState.PLAYING) {
@@ -172,6 +182,8 @@
 			});
 		} else {
 			player.loadVideoById({ videoId: videoId, startSeconds: start });
+			// Reclaim focus after the iframe settles with the new video.
+			setTimeout(function () { btnClose.focus(); }, 200);
 		}
 	}
 
@@ -187,14 +199,21 @@
 
 	function show() {
 		container.classList.add("ytm-open");
+		container.setAttribute("aria-hidden", "false");
 	}
 
 	function close() {
 		container.classList.remove("ytm-open");
+		container.setAttribute("aria-hidden", "true");
 		if (player) {
 			try {
 				player.stopVideo();
 			} catch (_) { }
+		}
+		// Return focus to the link that opened the player.
+		if (lastTrigger) {
+			lastTrigger.focus();
+			lastTrigger = null;
 		}
 		// Clear drag position *after* the close transition finishes so the
 		// player animates out from its current position instead of snapping
@@ -294,6 +313,23 @@
 	/* ------------------------------------------------------------------ */
 	btnClose.addEventListener("click", close);
 
+	/* Close on Escape key + trap Tab focus within the dialog */
+	document.addEventListener("keydown", function (e) {
+		if (!container.classList.contains("ytm-open")) return;
+
+		if (e.key === "Escape") {
+			close();
+			return;
+		}
+
+		// Focus trap: the close button is the only focusable element in
+		// our dialog, so Tab / Shift+Tab should stay on it.
+		if (e.key === "Tab") {
+			e.preventDefault();
+			btnClose.focus();
+		}
+	});
+
 	/* ------------------------------------------------------------------ */
 	/*  Pause when the user clicks YT logo / title inside the iframe       */
 	/* ------------------------------------------------------------------ */
@@ -307,9 +343,15 @@
 		// Check that the focus went to *our* iframe (not some other element)
 		var iframe = container.querySelector("iframe");
 		if (iframe && document.activeElement === iframe) {
-			try {
-				player.pauseVideo();
-			} catch (_) {}
+			// Wait a tick, then check whether the page actually lost focus
+			// (new tab opened) vs. the user simply tabbing into the iframe.
+			setTimeout(function () {
+				if (!document.hasFocus()) {
+					try {
+						player.pauseVideo();
+					} catch (_) {}
+				}
+			}, 100);
 		}
 	});
 
@@ -325,6 +367,7 @@
 
 		try {
 			var data = JSON.parse(link.getAttribute("data-yt-mini"));
+			lastTrigger = link; // remember for focus return on close
 			openVideo(data.videoId, data.start);
 		} catch (err) {
 			console.error("[YT Mini] Could not parse link data:", err);
