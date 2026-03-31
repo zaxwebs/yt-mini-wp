@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: YT Mini
- * Plugin URI:  https://github.com/your-repo/yt-mini
- * Description: Opens YouTube links in a sleek, draggable miniplayer instead of navigating away.
+ * Plugin URI:  https://github.com/zaxwebs/yt-mini-wp
+ * Description: Opens YouTube links in a sleek miniplayer instead of navigating away.
  * Version:     1.0.0
  * Author:      Zack Webster
  * License:     GPL-2.0-or-later
