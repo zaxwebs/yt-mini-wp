@@ -15,6 +15,8 @@
 	let pendingPlay = null;
 	let isDragging = false;
 	let dragOffset = { x: 0, y: 0 };
+	let dragSize = { w: 0, h: 0 }; // snapshot of wrapper size at drag start
+	let posRatio = null; // { rx, ry } — position as fraction of available space
 
 	/* ------------------------------------------------------------------ */
 	/*  URL Parsing — detect YT links with timestamps                      */
@@ -204,6 +206,41 @@
 
 
 	/* ------------------------------------------------------------------ */
+	/*  Position helpers                                                   */
+	/* ------------------------------------------------------------------ */
+
+	/**
+	 * Store the wrapper's current pixel position as a ratio (0–1) of
+	 * the available space so we can reconstruct it after a resize.
+	 */
+	function storeRatio() {
+		var rect = wrapper.getBoundingClientRect();
+		var vw = document.documentElement.clientWidth;
+		var vh = document.documentElement.clientHeight;
+		var maxX = Math.max(1, vw - rect.width);
+		var maxY = Math.max(1, vh - rect.height);
+		posRatio = {
+			rx: Math.max(0, Math.min(rect.left / maxX, 1)),
+			ry: Math.max(0, Math.min(rect.top / maxY, 1)),
+		};
+	}
+
+	/**
+	 * Apply the stored ratio to position the wrapper in the current viewport,
+	 * clamping so it never overflows.
+	 */
+	function applyRatio() {
+		if (!posRatio) return;
+		var rect = wrapper.getBoundingClientRect();
+		var vw = document.documentElement.clientWidth;
+		var vh = document.documentElement.clientHeight;
+		var maxX = Math.max(0, vw - rect.width);
+		var maxY = Math.max(0, vh - rect.height);
+		wrapper.style.left = (posRatio.rx * maxX) + "px";
+		wrapper.style.top  = (posRatio.ry * maxY) + "px";
+	}
+
+	/* ------------------------------------------------------------------ */
 	/*  Dragging                                                           */
 	/* ------------------------------------------------------------------ */
 	headerEl.addEventListener("pointerdown", function (e) {
@@ -213,21 +250,36 @@
 		var rect = wrapper.getBoundingClientRect();
 		dragOffset.x = e.clientX - rect.left;
 		dragOffset.y = e.clientY - rect.top;
+		dragSize.w = rect.width;
+		dragSize.h = rect.height;
 		headerEl.setPointerCapture(e.pointerId);
 		e.preventDefault();
 	});
 
 	headerEl.addEventListener("pointermove", function (e) {
 		if (!isDragging) return;
-		wrapper.style.left = e.clientX - dragOffset.x + "px";
-		wrapper.style.top = e.clientY - dragOffset.y + "px";
-		wrapper.style.right = "auto";
+		var vw = document.documentElement.clientWidth;
+		var vh = document.documentElement.clientHeight;
+		var maxX = Math.max(0, vw - dragSize.w);
+		var maxY = Math.max(0, vh - dragSize.h);
+		var x = Math.max(0, Math.min(e.clientX - dragOffset.x, maxX));
+		var y = Math.max(0, Math.min(e.clientY - dragOffset.y, maxY));
+		wrapper.style.left   = x + "px";
+		wrapper.style.top    = y + "px";
+		wrapper.style.right  = "auto";
 		wrapper.style.bottom = "auto";
 	});
 
 	headerEl.addEventListener("pointerup", function () {
 		isDragging = false;
 		container.classList.remove("ytm-dragging");
+		storeRatio();
+	});
+
+	/* Reposition on resize / orientation change */
+	window.addEventListener("resize", function () {
+		if (!posRatio) return;
+		applyRatio();
 	});
 
 	/* ------------------------------------------------------------------ */
