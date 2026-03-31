@@ -79,6 +79,13 @@
 					"data-yt-mini",
 					JSON.stringify(data)
 				);
+				// Tell assistive tech this link opens a dialog, not a page.
+				link.setAttribute("aria-haspopup", "dialog");
+				// Append a visually-hidden hint for screen readers.
+				var hint = document.createElement("span");
+				hint.className = "ytm-sr-only";
+				hint.textContent = " (opens in miniplayer)";
+				link.appendChild(hint);
 			}
 		});
 	}
