@@ -1,0 +1,170 @@
+/* ==========================================================================
+   YT Mini — Miniplayer Styles
+   ========================================================================== */
+
+:root {
+	--ytm-bg: rgba(15, 15, 20, 0.92);
+	--ytm-glass: rgba(255, 255, 255, 0.06);
+	--ytm-border: rgba(255, 255, 255, 0.08);
+	--ytm-accent: #ff4e6a;
+	--ytm-text: #f0f0f5;
+	--ytm-text-muted: rgba(240, 240, 245, 0.55);
+	--ytm-radius: 14px;
+	--ytm-width: 400px;
+	--ytm-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---------- Link Indicator ---------- */
+a[data-yt-mini] {
+	cursor: pointer;
+}
+
+/* ---------- Wrapper (handles position + padding) ---------- */
+.ytm-wrapper {
+	position: fixed;
+	z-index: 9999;
+	padding: 24px;
+	max-width: 100%;
+	box-sizing: border-box;
+	pointer-events: none;
+}
+
+/* Position the wrapper in the chosen corner */
+.ytm-pos-bottom-right { bottom: 0; right: 0; }
+.ytm-pos-bottom-left  { bottom: 0; left: 0; }
+.ytm-pos-top-right    { top: 0; right: 0; }
+.ytm-pos-top-left     { top: 0; left: 0; }
+
+/* ---------- Player ---------- */
+.ytm-player {
+	width: var(--ytm-width);
+	max-width: 100%;
+	border-radius: var(--ytm-radius);
+	overflow: hidden;
+	background: var(--ytm-bg);
+	backdrop-filter: blur(24px) saturate(1.6);
+	-webkit-backdrop-filter: blur(24px) saturate(1.6);
+	border: 1px solid var(--ytm-border);
+	transform: translateY(20px) scale(0.95);
+	opacity: 0;
+	pointer-events: none;
+	transition:
+		transform var(--ytm-transition),
+		opacity var(--ytm-transition);
+}
+
+.ytm-player.ytm-open {
+	transform: translateY(0) scale(1);
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/* ---------- Dragging State ---------- */
+.ytm-player.ytm-dragging {
+	transition: none;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 480px) {
+	.ytm-wrapper {
+		padding: 12px;
+	}
+}
+
+/* ---------- Header Bar ---------- */
+.ytm-header {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	background: var(--ytm-glass);
+	border-bottom: 1px solid var(--ytm-border);
+	cursor: grab;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+.ytm-header:active {
+	cursor: grabbing;
+}
+
+.ytm-header-icon {
+	width: 18px;
+	height: 18px;
+	flex-shrink: 0;
+}
+
+.ytm-header-icon svg {
+	width: 100%;
+	height: 100%;
+	fill: var(--ytm-accent);
+}
+
+.ytm-title {
+	flex: 1;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, sans-serif;
+	font-size: 12px;
+	font-weight: 600;
+	color: var(--ytm-text);
+	letter-spacing: 0.02em;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.ytm-title span {
+	color: var(--ytm-text-muted);
+	font-weight: 400;
+	margin-left: 6px;
+	font-size: 11px;
+}
+
+/* ---------- Header Buttons ---------- */
+.ytm-btn {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border: none;
+	border-radius: 7px;
+	background: transparent;
+	color: var(--ytm-text-muted);
+	cursor: pointer;
+	transition: all 0.2s ease;
+	padding: 0;
+	flex-shrink: 0;
+}
+
+.ytm-btn:hover {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--ytm-text);
+}
+
+.ytm-btn-close:hover {
+	background: rgba(255, 78, 106, 0.2);
+	color: var(--ytm-accent);
+}
+
+.ytm-btn svg {
+	width: 14px;
+	height: 14px;
+	fill: currentColor;
+}
+
+/* ---------- Video Viewport ---------- */
+.ytm-viewport {
+	position: relative;
+	width: 100%;
+	padding-top: 56.25%;
+	/* 16:9 */
+	background: #000;
+}
+
+.ytm-viewport iframe {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	border: 0;
+}
