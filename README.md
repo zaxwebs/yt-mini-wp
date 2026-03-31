@@ -9,8 +9,9 @@ A lightweight WordPress plugin that opens YouTube links in a sleek, draggable mi
 - **Draggable miniplayer** — Grab the header bar to reposition the player anywhere on screen.
 - **Privacy-enhanced embeds** — Uses `youtube-nocookie.com` to comply with YouTube's privacy-enhanced mode.
 - **Configurable position** — Choose the default screen corner (top-left, top-right, bottom-left, bottom-right) from the admin settings page.
-- **Glassmorphism UI** — Dark, semi-transparent player with backdrop blur and smooth open/close animations.
 - **Responsive** — Adapts gracefully to small viewports.
+- **Accessible** — ARIA dialog semantics, keyboard navigation (Escape to close, focus trap), and screen-reader hints.
+- **Smart pause** — Pauses the miniplayer when the user clicks through to YouTube via the native player's logo or title.
 - **Zero dependencies** — Pure vanilla JavaScript with no external libraries.
 
 ## Requirements
@@ -78,26 +79,17 @@ yt-mini/
 3. A delegated click listener intercepts clicks on tagged links, prevents navigation, and opens the video in a fixed-position miniplayer using the YouTube IFrame Player API.
 4. The player supports video swapping — clicking a different link loads the new video without rebuilding the player.
 5. The header bar supports pointer-based dragging so users can reposition the player freely.
+6. When the user clicks YouTube's native logo or video title inside the iframe (opening a new tab), the miniplayer automatically pauses.
 
-## Customization
+## Accessibility
 
-### CSS Custom Properties
-
-Override these variables to theme the miniplayer:
-
-```css
-:root {
-  --ytm-bg: rgba(15, 15, 20, 0.92);       /* Player background          */
-  --ytm-glass: rgba(255, 255, 255, 0.06);  /* Header bar background      */
-  --ytm-border: rgba(255, 255, 255, 0.08); /* Border color               */
-  --ytm-accent: #ff4e6a;                   /* Accent color (icon, hover) */
-  --ytm-text: #f0f0f5;                     /* Primary text color         */
-  --ytm-text-muted: rgba(240, 240, 245, 0.55); /* Secondary text color   */
-  --ytm-radius: 14px;                      /* Border radius              */
-  --ytm-width: 400px;                      /* Player width               */
-  --ytm-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); /* Animation     */
-}
-```
+| Feature | Detail |
+| --- | --- |
+| **Dialog semantics** | The player has `role="dialog"` and `aria-label="YouTube miniplayer"`, with `aria-hidden` toggled on open/close. |
+| **Focus management** | Focus moves to the close button when the player opens, and returns to the triggering link when it closes. |
+| **Keyboard support** | Press **Escape** to close the player. **Tab** is trapped within the dialog while it's open. |
+| **Link hints** | Intercepted links receive `aria-haspopup="dialog"` and a visually-hidden label "(opens in miniplayer)" so screen readers communicate the actual behavior. |
+| **Iframe isolation** | The YouTube iframe is set to `tabindex="-1"` so it doesn't interfere with the dialog's Tab order; users can still click into it for YouTube's native controls. |
 
 ## License
 
